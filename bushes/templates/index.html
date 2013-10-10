@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block headers %}
+<script src="{{ STATIC_URL }}js/blocks.js"></script>
+<script>
+  var tokens = [
+{% for token in tokens %}
+    { orth: '{{ token.orth|escapejs }}',
+      no_space: {% if token.no_space %}true{% else %}false{% endif %},
+      interp: {% if token.interp %}true{% else %}false{% endif %}
+    },
+{% endfor %}
+  ];
+  $(function() {
+    var parseview = new ParseView($('#parseview'));
+    parseview.init(tokens);
+
+    $('#tool_join').click(function() { parseview.setMode('join'); });
+    $('#tool_split').click(function() { parseview.setMode('split'); });
+    $('#tool_undo').click(function() { parseview.undo(); });
+    $('#tool_redo').click(function() { parseview.redo(); });
+
+    parseview.registerUpdateHandler(function() {
+        $('#tool_undo').prop('disabled', !parseview.canUndo());
+        $('#tool_redo').prop('disabled', !parseview.canRedo());
+    });
+  });
+</script>
+{% endblock %}
+
+{% block navbar_extras %}
+<form class="navbar-form navbar-right">
+    <div class="form-group">
+        <div class="btn-group" data-toggle="buttons">
+          <label class="btn btn-default active" id="tool_join">
+            <input type="radio" name="options">Łączenie
+          </label>
+          <label class="btn btn-default" id="tool_split">
+            <input type="radio" name="options">Rozdzielanie
+          </label>
+        </div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-default" id="tool_undo" disabled="disabled"><span class="glyphicon glyphicon-chevron-left"></span> Cofnij</button>
+          <button type="button" class="btn btn-default" id="tool_redo" disabled="disabled"><span class="glyphicon glyphicon-chevron-right"></span> Ponów</button>
+        </div>
+        <div class="btn-group" style="margin-left: 30px">
+            <button type="submit" class="btn btn-success">Gotowe!</button>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block content %}
+<div class='text-center'>
+</div>
+<hr>
+<div id="parseview">
+</div>
+{% endblock %}

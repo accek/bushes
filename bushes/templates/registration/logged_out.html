@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block headers %}
+{{ block.super }}
+<meta http-equiv="Refresh" content="1;url={% url 'index' %}">
+{% endblock %}
+
+{% block content %}
+<div class="empty-space-filler">
+    {% trans "You have been logged out." %}
+</div>
+{% endblock %}

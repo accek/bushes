@@ -1,0 +1,127 @@
+@import "mixins.less";
+
+/* Move down content because we have a fixed navbar that is 50px tall */
+body {
+  padding-top: 50px;
+  padding-bottom: 20px;
+}
+
+#content {
+  padding-top: 30px;
+}
+
+.parseview {
+  .user-select(none);
+
+  &.mode-join {
+    .token, .block, .node {
+      cursor: pointer;
+    }
+  }
+
+  &.mode-split {
+    .token, .block, .node {
+      cursor: crosshair;
+    }
+  }
+
+  .tokens {
+    font-size: 22pt;
+    color: #666;
+
+    .token {
+      &.hover-subtree {
+        color: #6ad;
+      }
+      &.hover {
+        text-decoration: underline;
+      }
+      &.hover-parent {
+        color: #da6;
+      }
+      &.selected_block {
+        color: #000;
+      }
+      &.selected {
+        color: #b00;
+      }
+    }
+  }
+
+  .blocks .block {
+    display: inline-block;
+    background: #ddd;
+    text-align: center;
+    margin: 8px 0;
+    padding: 0 12px;
+    border-radius: 10px;
+    &.selected {
+      background: #fdd;
+    }
+    &.block-hidden {
+      display: none;
+      &.hover-split-preview {
+        display: inline-block;
+        background: #eee;
+        color: #666;
+        .left, .right {
+          display: none;
+        }
+      }
+    }
+    .middle {
+      font-size: 32pt;
+    }
+    .left, .right {
+      color: #666;
+      max-width: 350px;
+      display: inline-block;
+      vertical-align: bottom;
+      padding-top: 4px;
+      padding-bottom: 12px;
+    }
+    .left {
+      padding-right: 6px;
+    }
+    .right {
+      padding-left: 6px;
+    }
+  }
+
+  .tree {
+    font-size: 22pt;
+    overflow: auto;
+    position: relative;
+
+    .line {
+      background-color: #666;
+      z-index: -1;
+    }
+
+    table {
+      border: 0;
+    }
+
+    tr {
+      height: 80px;
+    }
+
+    td {
+      padding: 0 4px;
+    }
+
+    span {
+      display: inline-block;
+      background: #ddd;
+      text-align: center;
+      margin: 0;
+      padding: 0 10px;
+      border-radius: 8px;
+
+      &.selected {
+        background: #fdd;
+      }
+    }
+
+  }
+}
