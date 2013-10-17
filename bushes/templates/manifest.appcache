@@ -1,0 +1,29 @@
+CACHE MANIFEST
+# Version: 36
+# User: {{ user.username }}
+
+CACHE:
+{{ STATIC_URL }}css/bootstrap.css
+{{ STATIC_URL }}less/mixins.less
+{{ STATIC_URL }}less/custom.less
+{{ STATIC_URL }}js/bootstrap.min.js
+{{ STATIC_URL }}js/jquery.js
+{{ STATIC_URL }}js/less.js
+{{ STATIC_URL }}js/common.js
+{{ STATIC_URL }}js/appcache.js
+{{ STATIC_URL }}js/progress.js
+{{ STATIC_URL }}js/sync.js
+{{ STATIC_URL }}js/parseview.js
+{{ STATIC_URL }}js/annotation.js
+{{ STATIC_URL }}fonts/glyphicons-halflings-regular.ttf
+{{ STATIC_URL }}fonts/glyphicons-halflings-regular.woff
+{{ STATIC_URL }}fonts/glyphicons-halflings-regular.svg
+{% for a in assignments %}{% url 'assignment' id=a.id %}
+{% endfor %}
+
+NETWORK:
+{% url 'login' %}
+{% url 'logout' %}
+{% url 'more' %}
+{% url 'return' %}
+{% url 'upload' %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block headers %}
+<script src="{{ STATIC_URL }}js/treeview.js"></script>
+<script src="{{ STATIC_URL }}js/common.js"></script>
+<script src="{{ STATIC_URL }}js/annotation.js"></script>
+<script>
+    var tokens = {{ sentence.tokens_json|safe }};
+    var parents = [{% for t in trees %}{{ t.tree_json|safe }},{% endfor %}];
+    var headers = [{% for t in trees %}'{% filter escapejs %}
+Tree #{{ t.id }}: {{ t.assignment.user.get_full_name }}
+<div class="header-actions">
+<a class="btn btn-default btn-xs" href="{% url 'clone_tree' tree_id=t.id %}">Clone and edit</a>
+<a class="btn btn-danger btn-xs" href="{% url 'admin:bushes_tree_delete' t.id %}">Delete</a>
+<a class="btn btn-danger btn-xs" href="{% url 'admin:bushes_assignment_delete' t.assignment_id %}">Delete assignment</a>
+</div>
+{% endfilter %}',{% endfor %}];
+
+    $(function() {
+        var treeview = new TreeView($('#treeview'));
+        treeview.init(tokens, parents, headers);
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div id="treeview">
+</div>
+{% endblock %}

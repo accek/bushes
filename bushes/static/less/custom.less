@@ -3,14 +3,48 @@
 /* Move down content because we have a fixed navbar that is 50px tall */
 body {
   padding-top: 50px;
-  padding-bottom: 20px;
+  height: 100%;
+  &.ready {
+    background-color: #cfc;
+  }
+}
+
+html {
+  height: 100%;
+}
+
+h3.popover-title {
+  font-weight: bold;
+}
+
+span.label {
+  cursor: default;
+}
+
+.navbar-labels {
+    padding: 13px;
+    .label {
+        display: none;
+    }
 }
 
 #content {
   padding-top: 30px;
+  padding-bottom: 20px;
+  background-color: white;
+  min-height: 100%;
 }
 
-.parseview {
+.treeview {
+  .node {
+    cursor: pointer;
+  }
+  .token {
+    .user-select(text);
+  }
+}
+
+.parseview, .treeview {
   .user-select(none);
 
   &.mode-join {
@@ -25,11 +59,20 @@ body {
     }
   }
 
+  &.mode-readonly {
+    .token, .block, .node {
+      cursor: default;
+    }
+  }
+
   .tokens {
     font-size: 22pt;
     color: #666;
 
     .token {
+      &.disagreement {
+        color: #f34;
+      }
       &.hover-subtree {
         color: #6ad;
       }
@@ -92,36 +135,64 @@ body {
     font-size: 22pt;
     overflow: auto;
     position: relative;
+    padding-bottom: 12px;
+
+    .tree-header {
+      padding-bottom: 30px;
+      font-size: 20pt;
+      font-weight: bold;
+      vertical-align: top;
+
+      .header-actions {
+        display: inline-block;
+        padding-left: 20px;
+      }
+    }
 
     .line {
       background-color: #666;
-      z-index: -1;
+      z-index: 1;
     }
 
-    table {
-      border: 0;
-    }
-
-    tr {
-      height: 80px;
-    }
-
-    td {
+    .node-container {
+      display: inline-block;
+      white-space: nowrap;
       padding: 0 4px;
+      text-align: center;
+      vertical-align: top;
+
+      &.has-parent {
+        margin-top: 40px;
+      }
+
+      &.root {
+        margin-bottom: 40px;
+      }
     }
 
-    span {
+    .node {
       display: inline-block;
       background: #ddd;
       text-align: center;
       margin: 0;
       padding: 0 10px;
       border-radius: 8px;
+      position: relative;
+      z-index: 2;
+
+      &.disagreement {
+        background: #f65;
+      }
 
       &.selected {
         background: #fdd;
       }
     }
+  }
+}
 
+.assignments {
+  .ready {
+    background-color: #cfc;
   }
 }

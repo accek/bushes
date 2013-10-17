@@ -1,18 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" {% block htmlattrs %}{% endblock %}>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>System Krzaczory</title>
+    <title>Krzaki</title>
 
     <link href="{{ STATIC_URL }}css/bootstrap.css" rel="stylesheet">
     <link href="{{ STATIC_URL }}less/custom.less" rel="stylesheet" type="text/less">
 
     <script src="{{ STATIC_URL }}js/jquery.js"></script>
     <script src="{{ STATIC_URL }}js/less.js"></script>
+    <script>console = typeof console === 'undefined' ? {log:function(str){}} : console;</script>
 
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -33,7 +34,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="{% url 'index' %}">System Krzaczory</a>
+          <a class="navbar-brand" href="{% url 'index' %}">Krzaki</a>
         </div>
         <div class="navbar-collapse collapse">
           <!--<ul class="nav navbar-nav">
@@ -61,7 +62,12 @@
               <input type="password" placeholder="Password" class="form-control">
             </div>
             <button type="submit" class="btn btn-success">Sign in</button>
-        </form>-->
+          </form>-->
+          {% if user.is_authenticated %} 
+          <ul class="nav navbar-nav navbar-right">
+              <li><a href="{% url 'logout' %}">Wyloguj</a></li>
+          </ul>
+          {% endif %}
           {% block navbar_extras %}
           {% endblock %}
         </div><!--/.navbar-collapse -->

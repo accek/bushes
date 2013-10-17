@@ -35,7 +35,7 @@ ParseView.prototype._generateHtml = function() {
             + escapeHtml(token.orth) + '</span>';
     }
     html += '</div>';
-    html += '<hr>';
+    html += '<hr class="blocks">';
     html += '<div class="blocks">';
     for (var i = 0; i < this.tokens.length; i++) {
         var token = this.tokens[i];
@@ -48,6 +48,7 @@ ParseView.prototype._generateHtml = function() {
     html += '</div>';
     html += '<hr>';
     html += '<div class="tree">';
+    html += '<div class="root node-container"></div>';
     html += '</div>';
     this.jcontainer.html(html);
 }
@@ -71,7 +72,7 @@ ParseView.prototype._generateBlocks = function() {
         var block = {
             num: index,
             token: token,
-            disabled: token.interp
+            interp: token.interp
         }
         this.blocks[index] = block;
         var self = this;
@@ -101,14 +102,15 @@ ParseView.prototype.init = function(tokens) {
 }
 
 ParseView.prototype._onClick = function(domnode, event) {
+    if (this.mode == 'readonly') {
+        return;
+    }
+
     event.preventDefault();
     event.stopPropagation();
     var jnode = $(domnode);
     var index = parseInt(jnode.attr('data-id'));
     var block = this.blocks[index];
-    if (block.disabled) {
-        return;
-    }
     if (this.mode == 'join') {
         if (this.selected_index != null) {
             if (index == this.selected_index) {
@@ -128,15 +130,23 @@ ParseView.prototype._onClick = function(domnode, event) {
                 if (parent == null) {
                     break;
                 }
+                this.setMode('join');
                 this._setParent(split_index, null);
                 split_index = parent;
             }
             return;
+        } else if (jnode.hasClass('node')) {
+            if (block.parent != null) {
+                this.setMode('join');
+                this._setParent(index, null);
+            }
+        } else {
+            if (block.children.length == 0) {
+                return;
+            }
+            this.setMode('join');
+            this._setParent(block.children[block.children.length - 1], null);
         }
-        if (block.children.length == 0) {
-            return;
-        }
-        this._setParent(block.children[block.children.length - 1], null);
     }
 }
 
@@ -198,7 +208,7 @@ ParseView.prototype._cleanRedo = function(index) {
 }
 
 ParseView.prototype.canUndo = function() {
-    return this.undo_stack.length > 0;
+    return this.mode != 'readonly' && this.undo_stack.length > 0;
 }
 
 ParseView.prototype.undo = function() {
@@ -213,7 +223,7 @@ ParseView.prototype.undo = function() {
 }
 
 ParseView.prototype.canRedo = function() {
-    return this.redo_stack.length > 0;
+    return this.mode != 'readonly' && this.redo_stack.length > 0;
 }
 
 ParseView.prototype.redo = function() {
@@ -229,6 +239,12 @@ ParseView.prototype.redo = function() {
 
 ParseView.prototype.registerUpdateHandler = function(handler) {
     this.on_update = handler;
+}
+
+ParseView.prototype._fireUpdateHandler = function() {
+    if (this.on_update) {
+        this.on_update(this);
+    }
 }
 
 ParseView.prototype._updateTop = function(index) {
@@ -249,7 +265,7 @@ ParseView.prototype._updateTop = function(index) {
 ParseView.prototype._updateBlock = function(index) {
     var block = this.blocks[index];
     var jblock = this._jblock(index)
-    if (block.parent == null) {
+    if (block.parent == null && block.auto_parent == null) {
         jblock.removeClass('block-hidden');
         var jleft = $('.left', jblock);
         var jright = $('.right', jblock);
@@ -287,7 +303,7 @@ ParseView.prototype._updateBlocks = function() {
     }
     for (var index = 0; index < this.blocks.length; index++) {
         var block = this.blocks[index];
-        if (block.parent != null && !block.disabled) {
+        if (block.parent != null) {
             this.blocks[block.parent].children.push(index);
         }
     }
@@ -300,15 +316,17 @@ ParseView.prototype._updateBlocks = function() {
         if (index == 0 || index == this.blocks.length - 1)
             continue;
         var block = this.blocks[index];
-        if (!block.disabled)
+        if (!block.interp)
+            continue;
+        if (block.parent != null)
+            continue;
+        if (block.children.length > 0)
             continue;
         var prev_block = this.blocks[index - 1];
         var next_block = this.blocks[index + 1];
         if (prev_block.top != null && prev_block.top == next_block.top) {
-            block.parent = prev_block.top;
-            this.blocks[block.parent].auto_children.push(index);
-        } else {
-            block.parent = null;
+            block.auto_parent = prev_block.top;
+            this.blocks[block.auto_parent].auto_children.push(index);
         }
     }
 
@@ -317,9 +335,7 @@ ParseView.prototype._updateBlocks = function() {
     }
     this._clearSelection();
     this._updateTree();
-    if (this.on_update) {
-        this.on_update(this);
-    }
+    this._fireUpdateHandler();
 }
 
 ParseView.prototype._updateSelection = function() {
@@ -342,43 +358,6 @@ ParseView.prototype._clearSelection = function() {
     this._updateSelection();
 }
 
-ParseView.prototype.__updateDepths = function(index, depth) {
-    var block = this.blocks[index];
-    block.depth = depth;
-    var max = depth;
-    for (var i = 0; i < block.children.length; i++) {
-        var sub_depth = this.__updateDepths(block.children[i], depth + 1);
-        if (sub_depth > max) {
-            max = sub_depth;
-        }
-    }
-    return max;
-}
-
-ParseView.prototype._updateDepths = function() {
-    var max_depth = 0;
-    for (var i = 0; i < this.blocks.length; i++) {
-        if (this.blocks[i].parent == null) {
-            var depth = this.__updateDepths(i, 0);
-            if (depth > max_depth) {
-                max_depth = depth;
-            }
-        }
-    }
-    for (var i = 0; i < this.blocks.length; i++) {
-        var block = this.blocks[i];
-        if (!block.disabled) {
-            continue;
-        }
-        var prev_block = this.blocks[i - 1];
-        var next_block = this.blocks[i + 1];
-        var prev_depth = prev_block ? prev_block.depth : 0;
-        var next_depth = next_block ? next_block.depth : 0;
-        block.depth = Math.max(prev_depth, next_depth);
-    }
-    return max_depth;
-}
-
 ParseView.prototype._drawLine = function(div1, div2, thickness) {
 
     function getOffset( el ) { // return element top, left, width, height
@@ -386,11 +365,12 @@ ParseView.prototype._drawLine = function(div1, div2, thickness) {
         var _y = 0;
         var _w = el.offsetWidth|0;
         var _h = el.offsetHeight|0;
-        while( el && el.tagName != 'DIV' && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
-            console.log(el);
+        while( el && !$(el).hasClass('tree') && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
+            console.log('el: ' + el);
             _x += el.offsetLeft - el.scrollLeft;
             _y += el.offsetTop - el.scrollTop;
             el = el.offsetParent;
+            console.log('parent: ' + el);
         }
         return { top: _y, left: _x, width: _w, height: _h };
     }
@@ -426,7 +406,7 @@ ParseView.prototype._drawLine = function(div1, div2, thickness) {
     return line;
 }
 
-ParseView.prototype._updateTree = function() {
+ParseView.prototype._drawTreeBranch = function(index, parent_node, parent_container) {
     var self = this;
     function on_click(event) {
         self._onClick(this, event);
@@ -438,43 +418,56 @@ ParseView.prototype._updateTree = function() {
         self._onUnhover(this, event);
     }
 
-    var max_depth = this._updateDepths();
-    var table = document.createElement('table');
-    var spans = [];
-    for (var d = 0; d <= max_depth; d++) {
-        var row = document.createElement('tr');
-        for (var index = 0; index < this.blocks.length; index++) {
-            var block = this.blocks[index];
-            var td = document.createElement('td');
-            if (block.depth == d) {
-                var span = document.createElement('span');
-                span.setAttribute('data-id', index);
-                span.setAttribute('class', 'node');
-                $(span).click(on_click).hover(on_hover, on_unhover);
-                spans[index] = span;
-                var text = document.createTextNode(block.token.orth);
-                span.appendChild(text);
-                td.appendChild(span);
-            }
-            row.appendChild(td);
-        }
-        table.appendChild(row);
+    var block = this.blocks[index];
+    var domcontainer = document.createElement('div');
+    if (parent_node) {
+        domcontainer.setAttribute('class', 'node-container has-parent');
+    } else {
+        domcontainer.setAttribute('class', 'node-container');
+    }
+    var domnode = document.createElement('div');
+    domnode.setAttribute('class', 'node');
+    domnode.setAttribute('data-id', index);
+    $(domnode).click(on_click).hover(on_hover, on_unhover);
+    var domtext = document.createTextNode(block.token.orth);
+    domnode.appendChild(domtext);
+    domcontainer.appendChild(domnode);
+    domcontainer.appendChild(document.createElement('br'));
+    parent_container.appendChild(domcontainer);
+
+    this.tree_domnodes[index] = domnode;
+
+    var children = block.children;
+    for (var i = 0; i < children.length; i++) {
+        var child_index = children[i];
+        this._drawTreeBranch(child_index, domnode, domcontainer);
     }
 
-    var jtree = $('.tree', this.jcontainer);
-    jtree.empty();
-    jtree.append(table);
-    console.log(table);
+    return domcontainer;
+}
 
-    var lines = [];
+ParseView.prototype._updateTree = function() {
+    var jtree = $('.tree', this.jcontainer);
+    var jroot = $('.root', jtree);
+    var domroot = jroot[0];
+    this.tree_domnodes = {};
+    jroot.empty();
     for (var index = 0; index < this.blocks.length; index++) {
         var block = this.blocks[index];
-        if (block.parent != null && !block.disabled) {
-            var line = this._drawLine(spans[block.parent], spans[index], 3);
-            lines.push(line);
+        if (block.parent == null && block.auto_parent == null) {
+            this._drawTreeBranch(index, null, domroot);
         }
     }
-    jtree.append(lines);
+    for (var index = 0; index < this.blocks.length; index++) {
+        var block = this.blocks[index];
+        if (block.parent != null && this.tree_domnodes[index] !== undefined) {
+            var domline = this._drawLine(
+                    this.tree_domnodes[block.parent],
+                    this.tree_domnodes[index],
+                    3);
+            domroot.appendChild(domline);
+        }
+    }
 }
 
 ParseView.prototype.setMode = function(mode) {
@@ -482,14 +475,16 @@ ParseView.prototype.setMode = function(mode) {
     this.jcontainer.removeClass('mode-join');
     this.jcontainer.removeClass('mode-split');
     this.jcontainer.addClass('mode-' + this.mode);
+    $('.blocks', this.jcontainer).toggle(mode != 'readonly');
     this._clearSelection();
+    this._fireUpdateHandler();
 }
 
 ParseView.prototype._onHover = function(domnode, event) {
     var jnode = $(domnode);
     var index = parseInt(jnode.attr('data-id'));
     var block = this.blocks[index];
-    if (block.disabled) {
+    if (block.interp) {
         return;
     }
     if (this.mode == 'split') {
@@ -526,3 +521,20 @@ ParseView.prototype._onUnhover = function(domnode, event) {
         .removeClass('hover-split-preview');
 }
 
+ParseView.prototype.getParents = function() {
+    var parents = [];
+    for (var index = 0; index < this.blocks.length; index++) {
+        parents[index] = this.blocks[index].parent;
+    }
+    return parents;
+}
+
+ParseView.prototype.setParents = function(parents) {
+    if (parents.length != this.blocks.length) {
+        throw "Invalid parameter length in call to ParseView.setParents";
+    }
+    for (var index = 0; index < this.blocks.length; index++) {
+        this.blocks[index].parent = parents[index];
+    }
+    this._updateBlocks();
+}
