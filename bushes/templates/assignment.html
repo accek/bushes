@@ -15,7 +15,6 @@
     $(function() {
         initAnnotation('{{ user.username|escapejs }}', tokens, parents,
                 {{ assignment.id }}, {% if ready %}true{% else %}false{% endif %});
-        new SyncController().start();
     });
 </script>
 {% endblock %}
@@ -40,6 +39,7 @@
         </div>
     </div>
 </form>
+<p class="navbar-right navbar-text" id="saving_label">Zapisuję...</p>
 {% endblock %}
 
 {% block content %}

@@ -1,16 +1,29 @@
 from django.contrib import admin
-from django.db.models import Count
+from django.db.models import Count, Max, TextField
 from django.core.urlresolvers import reverse
+from django.contrib.flatpages.admin import FlatPageAdmin
+from django.contrib.flatpages.models import FlatPage
+from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin
 from bushes.models import Sentence, Assignment, Tree
+
+from ckeditor.widgets import CKEditorWidget
+
+
+class AdminSite(admin.AdminSite):
+    def has_permission(self, request):
+        return request.user.is_active and request.user.is_authenticated()
+
+site = AdminSite()
+
+site.register(User, UserAdmin)
 
 class SentenceAdmin(admin.ModelAdmin):
     list_display = ('id', 'identifier', 'sentence', 'length',
-            'num_assignments', 'num_trees')
+            'priority', 'num_assignments', 'num_trees', 'last_tree',
+            'state', 'superannotator')
     list_display_links = ('id',)
-
-    def length(self, instance):
-        return len(instance.text.split())
-    length.short_description = '# words'
+    list_filter = ('state', 'superannotator')
 
     def num_assignments(self, instance):
         return int(instance.num_a)
@@ -22,25 +35,39 @@ class SentenceAdmin(admin.ModelAdmin):
     num_trees.admin_order_field = 'num_t'
     num_trees.short_description = '# trees'
 
+    def last_tree(self, instance):
+        return instance.last_t
+    last_tree.admin_order_field = 'last_t'
+    last_tree.short_description = 'Last tree'
+
     def sentence(self, instance):
         url = reverse('sentence', args=(instance.id,))
         return '<a href="%s">%s</a>' % (url, unicode(instance))
     sentence.allow_tags = True
 
+    def has_change_permission(self, request, obj=None):
+        if obj is None:
+            return request.user.is_staff or request.user.is_superuser
+        return request.user.is_superuser
+
     def queryset(self, request):
         qs = super(SentenceAdmin, self).queryset(request)
         return qs.annotate(num_a=Count('assignments'),
-                num_t=Count('assignments__latest_tree'))
+                num_t=Count('assignments__latest_tree'),
+                last_t=Max('assignments__latest_tree__date'),
+                )
 
-admin.site.register(Sentence, SentenceAdmin)
+site.register(Sentence, SentenceAdmin)
+
 
 class AssignmentAdmin(admin.ModelAdmin):
-    fields = ('sentence', 'user', 'completion_date')
+    fields = ('sentence', 'user', 'creation_date', 'completion_date')
     readonly_fields = ('sentence', 'user', 'creation_date')
-    list_display = ('id', 'user', '__unicode__', 'completion_date')
+    list_display = ('id', 'user', '__unicode__', 'creation_date',
+            'completion_date')
     list_display_links = ('id', '__unicode__')
     date_hierarchy = 'completion_date'
-    list_filter = ('user',)
+    list_filter = ('user', 'latest_tree__state')
     list_select_related = True
     search_fields = ('sentence__text', 'user__username', 'user__first_name',
             'user__last_name')
@@ -50,10 +77,23 @@ class AssignmentAdmin(admin.ModelAdmin):
             return ()
         return self.readonly_fields
 
-admin.site.register(Assignment, AssignmentAdmin)
+site.register(Assignment, AssignmentAdmin)
+
 
 class TreeAdmin(admin.ModelAdmin):
     readonly_fields = ('assignment',)
+    list_filter = ('state',)
     list_select_related = True
 
-admin.site.register(Tree, TreeAdmin)
+site.register(Tree, TreeAdmin)
+
+
+class FlatPageCustom(FlatPageAdmin):
+    formfield_overrides = {
+        TextField: {'widget': CKEditorWidget}
+    }
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_staff or request.user.is_superuser
+
+site.register(FlatPage, FlatPageCustom)

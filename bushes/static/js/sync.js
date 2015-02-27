@@ -55,8 +55,8 @@ SyncController.prototype.start = function() {
             success: function(result) {
                 if (result == 'OK') {
                     console.log("Uploaded assignment #" + id);
+                    localStorageAddToList('uploaded_assignments', id);
                     localStorageRemoveFromList('ready_assignments', id);
-                    delete localStorage[key];
                     $('#row_' + id).hide();
                     next();
                 } else {

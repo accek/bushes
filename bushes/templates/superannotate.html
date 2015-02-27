@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="real_content">
+<h2>Twoje zdania do superanotacji</h2>
+
+{% if sentences %}
+<table class="table assignments">
+    <thead>
+        <tr>
+            <th width="80">ID</th>
+            <th>Zdanie</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in sentences %}
+        <tr id="row_{{ s.id }}">
+            <td>{{ s.id }}</td>
+            <td><a href="{% url 'sentence' id=s.id %}">{{ s }}</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Nie masz żadnych zdań.</p>
+{% endif %}
+
+
+{% if num_extra > 0 %}
+<p>Poza tym jest jeszcze {{ num_extra }} zdań nieprzydzielonych superanotatorom.
+Będą się tutaj same pojawiać w miarę przetwarzania powyższych.</p>
+{% endif %}
+
+{% if not max %}
+<p id="actions"><a href="{% url 'superannotate_refresh' %}" class="btn btn-default">Poproś o więcej zdań</a>
+</p>
+{% endif %}
+</div>
+
+{% endblock %}

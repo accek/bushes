@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="real_content">
+<h2>Zdania, w których superanotator wybrał inną interpretację, niż Twoja</h2>
+
+<p>(Proszę nie traktować niniejszej listy jako powodu do zmartwień.
+W wielu przypadkach struktura zdań jest niejednoznaczna, i superanotator
+musi wybierać spośród wielu równie dobrych struktur)</p>
+
+{% if sentences %}
+<table class="table assignments">
+    <thead>
+        <tr>
+            <th width="80">ID</th>
+            <th>Zdanie</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in sentences %}
+        <tr id="row_{{ s.id }}">
+            <td>{{ s.id }}</td>
+            <td><a href="{% url 'sentence' id=s.id %}">{{ s }}</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Nie ma takich zdań.</p>
+{% endif %}
+
+</div>
+
+{% endblock %}

@@ -140,13 +140,13 @@ ParseView.prototype._onClick = function(domnode, event) {
                 this.setMode('join');
                 this._setParent(index, null);
             }
-        } else {
+        } /*else {
             if (block.children.length == 0) {
                 return;
             }
             this.setMode('join');
             this._setParent(block.children[block.children.length - 1], null);
-        }
+        }*/
     }
 }
 
@@ -299,6 +299,7 @@ ParseView.prototype._updateBlocks = function() {
         var block = this.blocks[index];
         block.children = [];
         block.auto_children = [];
+        block.auto_parent = null;
         block.top = null;
     }
     for (var index = 0; index < this.blocks.length; index++) {
@@ -494,10 +495,10 @@ ParseView.prototype._onHover = function(domnode, event) {
                 this._jblock(split_index).addClass('hover-split-preview');
                 split_index = this.blocks[split_index].parent;
             }
-        } else if (jnode.hasClass('block') && block.children.length > 0) {
+        } /*else if (jnode.hasClass('block') && block.children.length > 0) {
             var split_index = block.children[block.children.length - 1];
             this._jblock(split_index).addClass('hover-split-preview');
-        } /*else if (jnode.hasClass('node') && block.parent != null) {
+        } else if (jnode.hasClass('node') && block.parent != null) {
             this._jblock(index).addClass('hover-split-preview');
         }*/
 

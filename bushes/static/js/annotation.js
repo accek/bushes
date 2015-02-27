@@ -3,8 +3,7 @@ function initAnnotation(username, tokens, parents, assignment_id, ready) {
     parseview.init(tokens);
 
     var ready_armed = false;
-
-    console.log(localStorageGetList('ready_assignments'));
+    var saving = false;
 
     var key = 'ass_' + assignment_id;
 
@@ -30,7 +29,8 @@ function initAnnotation(username, tokens, parents, assignment_id, ready) {
         }
     }
 
-    if (localStorageInList('ready_assignments', assignment_id)) {
+    if (localStorageInList('ready_assignments', assignment_id) ||
+            localStorageInList('uploaded_assignments', assignment_id)) {
         ready = true;
     }
 
@@ -44,7 +44,8 @@ function initAnnotation(username, tokens, parents, assignment_id, ready) {
         $('#tool_undo').prop('disabled', !parseview.canUndo());
         $('#tool_redo').prop('disabled', !parseview.canRedo());
         $('#notready_actions').toggle(!ready);
-        $('#ready_actions').toggle(ready);
+        $('#ready_actions').toggle(ready && !saving);
+        $('#saving_label').toggle(saving);
 
         var jready = $('#tool_ready');
         if (ready_armed) {
@@ -75,9 +76,11 @@ function initAnnotation(username, tokens, parents, assignment_id, ready) {
         try {
             var assignments = JSON.parse(localStorage['assignments']);
             var ready_assignments = localStorageGetList('ready_assignments');
+            var uploaded_assignments = localStorageGetList('uploaded_assignments');
             for (var assignment in assignments) {
                 assignment = parseInt(assignment);
-                if (ready_assignments.indexOf(assignment) == -1) {
+                if (ready_assignments.indexOf(assignment) == -1 &&
+                    uploaded_assignments.indexOf(assignment) == -1) {
                     window.location.href = assignment;
                     return;
                 }
@@ -100,6 +103,14 @@ function initAnnotation(username, tokens, parents, assignment_id, ready) {
             ready = true;
             parseview.setMode('readonly');
             localStorageAddToList('ready_assignments', assignment_id);
+            saving = true;
+            
+            var sync = new SyncController();
+            sync.oncomplete = sync.onerror = function() {
+                saving = false;
+                updateState();
+            };
+            sync.start();
         } else {
             ready_armed = true;
         }

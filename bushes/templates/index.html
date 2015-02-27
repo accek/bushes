@@ -60,9 +60,32 @@
             $('#status_' + ready[i]).addClass('ready');
         }
 
+        var uploaded = localStorageGetList('uploaded_assignments');
+        for (var i = 0; i < uploaded.length; i++) {
+            $('#status_' + uploaded[i]).addClass('ready');
+        }
     });
-    localStorage['assignments'] = JSON.stringify({ {% for a in assignments %}{{ a.id }}:1,{% endfor %} });
+
+    var assignments = { {% for a in assignments %}{{ a.id }}:1,{% endfor %} };
+    localStorage['assignments'] = JSON.stringify(assignments);
+
+    var uploaded = localStorageGetList('uploaded_assignments');
+    for (var i = 0; i < uploaded.length; i++) {
+        var id = uploaded[i];
+        if (assignments[id] != undefined)
+            continue;
+        var key = 'ass_' + id;
+        localStorageRemoveFromList('uploaded_assignments', id);
+        delete localStorage[key];
+        console.log("Pruned assignment #" + id);
+    }
 </script>
+{% endblock %}
+
+{% block links_extras %}
+{% if user.is_authenticated %}
+<li><a href="{% url 'my_errors' %}">Niezgodności superanotacji</a></li>
+{% endif %}
 {% endblock %}
 
 {% block navbar_extras %}

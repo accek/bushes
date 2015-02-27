@@ -1,8 +1,11 @@
-# Django settings for bushes project.
-
-import os.path
-
-basedir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+# Default Django settings for bushes project.
+#
+# Please crate your own settings.py in a separate deployment
+# folder with something like this:
+#
+#   from bushes.default_settings import *
+#
+# and then customize.
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -39,11 +42,11 @@ TIME_ZONE = 'Europe/Warsaw'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
-LANGUAGE_CODE = 'pl-pl'
+LANGUAGE_CODE = 'en-us'
 
 LANGUAGES = [
-    'pl-pl',
     'en-us',
+    'pl-pl',
 ]
 
 SITE_ID = 1
@@ -61,12 +64,13 @@ USE_TZ = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/var/www/example.com/media/"
-MEDIA_ROOT = os.path.join(basedir, 'media/')
+MEDIA_ROOT = '__override_in_settings__'
+CKEDITOR_UPLOAD_PATH  = '__override_in_settings__'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://example.com/media/", "http://media.example.com/"
-MEDIA_URL = ''
+MEDIA_URL = 'media/'
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
@@ -94,7 +98,7 @@ STATICFILES_FINDERS = (
 )
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = '%@d%i@16xyow(@oqjxp-d(acad^o08h0(2-4@!v(!%fvo!pk95'
+SECRET_KEY = '__override_this_secret_key_in_your_settings__'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -104,19 +108,18 @@ TEMPLATE_LOADERS = (
 )
 
 MIDDLEWARE_CLASSES = (
-    'django.middleware.http.ConditionalGetMiddleware',
+    #'django.middleware.http.ConditionalGetMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-#    'htmlmin.middleware.HtmlMinifyMiddleware',
+    'django.middleware.transaction.TransactionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
 #    'debug_toolbar.middleware.DebugToolbarMiddleware',
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
 )
-
-#HTML_MINIFY = True
 
 DEBUG_TOOLBAR_CONFIG = {
     'INTERCEPT_REDIRECTS': False,
@@ -144,9 +147,12 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'django.contrib.admindocs',
+    'django.contrib.flatpages',
     'django_extensions',
     'debug_toolbar',
     'bootstrap3',
+    'registration',
+    'ckeditor',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -166,6 +172,8 @@ LOGIN_URL = '/login'
 LOGIN_REDIRECT_URL = '/'
 
 ASSIGNMENT_SIZE = 50
+
+ACCOUNT_ACTIVATION_DAYS = 7
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to

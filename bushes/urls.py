@@ -1,17 +1,25 @@
 from django.conf import settings
 from django.conf.urls import patterns, include, url
 from django.views.generic import TemplateView
+from django.conf.urls.static import static
 import bushes.registration_backend
 
-# Uncomment the next two lines to enable the admin:
-from django.contrib import admin
-admin.autodiscover()
+from bushes import admin
 
 urlpatterns = patterns('',
     url(r'^$', 'bushes.views.index_view', name='index'),
     url(r'^a/(?P<id>\d+)$', 'bushes.views.assignment_view', name='assignment'),
     url(r'^s/(?P<id>\d+)$', 'bushes.views.sentence_view', name='sentence'),
+
     url(r'^clone/(?P<tree_id>\d+)$', 'bushes.views.clone_view', name='clone_tree'),
+    url(r'^accept/(?P<tree_id>\d+)$', 'bushes.views.accept_view', name='accept_tree'),
+    url(r'^unaccept/(?P<tree_id>\d+)$', 'bushes.views.unaccept_view', name='unaccept_tree'),
+    url(r'^my-errors$', 'bushes.views.my_errors_view', name='my_errors'),
+    url(r'^superannotate$', 'bushes.views.superannotate_view', name='superannotate'),
+    url(r'^superannotate/refresh$', 'bushes.views.superannotate_refresh_view', name='superannotate_refresh'),
+    url(r'^superannotate/next$', 'bushes.views.superannotate_next_view', name='superannotate_next'),
+    url(r'^superannotate/cancel$', 'bushes.views.superannotate_cancel_view', name='superannotate_cancel'),
+
     url(r'^manifest.appcache$',
         'bushes.views.manifest_view', name='index_manifest'),
     url(r'^upload$', 'bushes.views.upload_view', name='upload'),
@@ -27,6 +35,8 @@ urlpatterns = patterns('',
 
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
     url(r'^admin/', include(admin.site.urls)),
+
+    url(r'^ckeditor/', include('ckeditor.urls')),
 )
 
 for app in settings.INSTALLED_APPS:
@@ -38,3 +48,5 @@ for app in settings.INSTALLED_APPS:
             pass
 
 urlpatterns += bushes.registration_backend.urlpatterns
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

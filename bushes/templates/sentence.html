@@ -1,5 +1,17 @@
 {% extends "base.html" %}
 
+{% block navbar_extras %}
+{% if superannotation_done %}
+<form class="navbar-form navbar-right">
+    <div class="form-group">
+        <div class="btn-group" style="margin-left: 30px">
+            <a class="btn btn-primary" href="{% url 'superannotate_next' %}">Następne zdanie</a>
+        </div>
+    </div>
+</form>
+{% endif %}
+{% endblock %}
+
 {% block headers %}
 <script src="{{ STATIC_URL }}js/treeview.js"></script>
 <script src="{{ STATIC_URL }}js/common.js"></script>
@@ -8,17 +20,27 @@
     var tokens = {{ sentence.tokens_json|safe }};
     var parents = [{% for t in trees %}{{ t.tree_json|safe }},{% endfor %}];
     var headers = [{% for t in trees %}'{% filter escapejs %}
-Tree #{{ t.id }}: {{ t.assignment.user.get_full_name }}
+Tree #{{ t.id }}: {% if can_review or t.assignment.user == user %}{{ t.assignment.user.get_full_name }}{% endif %} <span class="sentence-date">({{ t.date }})</span>
+{% if can_review %}
 <div class="header-actions">
-<a class="btn btn-default btn-xs" href="{% url 'clone_tree' tree_id=t.id %}">Clone and edit</a>
+<a class="btn btn-default btn-xs" href="{% url 'clone_tree' tree_id=t.id %}">Clone and assign to me</a>
+{% if request.user.is_superuser %}
 <a class="btn btn-danger btn-xs" href="{% url 'admin:bushes_tree_delete' t.id %}">Delete</a>
-<a class="btn btn-danger btn-xs" href="{% url 'admin:bushes_assignment_delete' t.assignment_id %}">Delete assignment</a>
+<a class="btn btn-danger btn-xs" href="{% url 'admin:bushes_assignment_delete' t.assignment_id %}">Return to the annotator</a>
+{% endif %}
+{% if t.state == 'ACCEPTED' %}
+<a class="btn btn-default btn-xs" href="{% url 'unaccept_tree' tree_id=t.id %}">Unaccept</a>
+{% else %}
+<a class="btn btn-success btn-xs" href="{% url 'accept_tree' tree_id=t.id %}">Accept</a>
+{% endif %}
 </div>
+{% endif %}
 {% endfilter %}',{% endfor %}];
+    var states = [{% for t in trees %}'{{ t.state|safe }}',{% endfor %}];
 
     $(function() {
         var treeview = new TreeView($('#treeview'));
-        treeview.init(tokens, parents, headers);
+        treeview.init(tokens, parents, headers, states);
     });
 </script>
 {% endblock %}

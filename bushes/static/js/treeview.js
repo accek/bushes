@@ -90,10 +90,11 @@ TreeView.prototype._generateBlocks = function() {
     }
 }
 
-TreeView.prototype.init = function(tokens, parents, tree_headers) {
+TreeView.prototype.init = function(tokens, parents, tree_headers, tree_states) {
     this.tokens = tokens;
     this.parents = parents;
     this.tree_headers = tree_headers;
+    this.tree_states = tree_states;
     this._generateHtml();
     this._generateBlocks();
     this._updateChildren();
@@ -241,7 +242,7 @@ TreeView.prototype._updateTrees = function() {
     jtree.empty();
     this.tree_domnodes = [];
     for (var t = 0; t < this.parents.length; t++) {
-        var jroot = $('<div class="root node-container"></div>');
+        var jroot = $('<div class="root node-container state-' + this.tree_states[t] + '"></div>');
         var domroot = jroot[0];
         var parents = this.parents[t];
         this.tree_domnodes[t] = []
